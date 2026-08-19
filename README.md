@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Processamento Gráfico 2026/2
 
 Este repositório contém exemplos e códigos utilizados na disciplina de **Processamento Gráfico: Fundamentos** do curso Ciência da Computação da Unisinos. Ele é estruturado para facilitar a organização dos arquivos e a compilação dos projetos utilizando CMake.
@@ -95,3 +96,7 @@ Recomendamos que você crie um repositório próprio, estruturado com subdiretó
 Consulte os seguintes materiais para ajuda adicional:
 - [Exemplo de README.md de repositório](misc/Template_README_Repositorio.md)
 - [Exemplo de README.md para cada projeto](misc/Template_README_Projeto.md)
+=======
+# Processamento-Grafico
+
+>>>>>>> f07d88fca282737a64fe0aca968067d1164fe857
