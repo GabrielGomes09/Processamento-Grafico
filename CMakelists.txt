@@ -43,6 +43,9 @@ include_directories(${stb_image_SOURCE_DIR})
 set(EXERCISES
     Exemplos/HelloTriangle
     Lista-1/Ex1
+    Lista-1/Ex2
+    Lista-1/Ex3
+    Lista-1/Ex4
 )
 
 add_compile_options(-Wno-pragmas)
