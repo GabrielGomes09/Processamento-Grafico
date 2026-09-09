@@ -1,0 +1,192 @@
+
+#include <iostream>
+#include <string>
+#include <assert.h>
+
+using namespace std;
+
+// GLAD
+#include <glad/glad.h>
+
+// GLFW
+#include <GLFW/glfw3.h>
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
+int setupShader();
+int setupGeometry();
+
+const GLuint WIDTH = 800, HEIGHT = 600;
+
+const GLchar *vertexShaderSource = R"glsl(
+ #version 400
+ layout (location = 0) in vec3 position;
+ void main()
+ {
+	 gl_Position = vec4(position.x, position.y, position.z, 1.0);
+ }
+ )glsl";
+
+const GLchar *fragmentShaderSource = R"glsl(
+ #version 400
+ uniform vec4 inputColor;
+ out vec4 color;
+ void main()
+ {
+	 color = inputColor;
+ }
+ )glsl";
+
+int main()
+{
+	glfwInit();
+
+	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Exercicio 5 -- Mesma Cena nos 4 Quadrantes", nullptr, nullptr);
+	if (!window)
+	{
+		std::cerr << "Falha ao criar a janela GLFW" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+
+	glfwSetKeyCallback(window, key_callback);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cerr << "Falha ao inicializar GLAD" << std::endl;
+		return -1;
+	}
+
+	const GLubyte *renderer = glGetString(GL_RENDERER);
+	const GLubyte *version = glGetString(GL_VERSION);
+	cout << "Renderer: " << renderer << endl;
+	cout << "OpenGL version supported " << version << endl;
+
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height); // será sobrescrito a cada quadrante dentro do loop
+
+	GLuint shaderID = setupShader();
+	GLuint VAO = setupGeometry();
+
+	GLint colorLoc = glGetUniformLocation(shaderID, "inputColor");
+
+	glUseProgram(shaderID);
+
+	double prev_s = glfwGetTime();
+	double title_countdown_s = 0.1;
+
+	// ALTERADO: as 4 posições/tamanhos de viewport, um por quadrante
+	int quadX[4] = { 0, width / 2, 0, width / 2 };
+	int quadY[4] = { 0, 0, height / 2, height / 2 };
+
+	while (!glfwWindowShouldClose(window))
+	{
+		{
+			double curr_s = glfwGetTime();
+			double elapsed_s = curr_s - prev_s;
+			prev_s = curr_s;
+
+			title_countdown_s -= elapsed_s;
+			if (title_countdown_s <= 0.0 && elapsed_s > 0.0)
+			{
+				double fps = 1.0 / elapsed_s;
+				char tmp[256];
+				sprintf(tmp, "Exercicio 5 -- Mesma Cena nos 4 Quadrantes\tFPS %.2lf", fps);
+				glfwSetWindowTitle(window, tmp);
+				title_countdown_s = 0.1;
+			}
+		}
+
+		glfwPollEvents();
+
+		// ALTERADO: precisa limpar a tela inteira, não só o viewport atual
+		glViewport(0, 0, width, height);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glBindVertexArray(VAO);
+		glUniform4f(colorLoc, 1.0f, 0.0f, 1.0f, 1.0f); // magenta
+
+		// ALTERADO: antes era 1 draw call; agora são 4, um por quadrante
+		for (int q = 0; q < 4; q++)
+		{
+			glViewport(quadX[q], quadY[q], width / 2, height / 2);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+
+		glfwSwapBuffers(window);
+	}
+	glDeleteVertexArrays(1, &VAO);
+	glfwTerminate();
+	return 0;
+}
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
+int setupShader()
+{
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	GLint success;
+	GLchar infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	GLuint shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	return shaderProgram;
+}
+
+int setupGeometry()
+{
+	GLfloat vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f,  0.5f, 0.0f,
+	};
+
+	GLuint VBO, VAO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	return VAO;
+}

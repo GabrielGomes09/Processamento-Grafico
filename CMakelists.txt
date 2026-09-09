@@ -46,6 +46,12 @@ set(EXERCISES
     Lista-1/Ex2
     Lista-1/Ex3
     Lista-1/Ex4
+    Lista2/Ex1
+    Lista2/Ex2
+    Lista2/Ex3
+    Lista2/Ex4
+    Lista2/Ex5
+    Lista2/Ex6
 )
 
 add_compile_options(-Wno-pragmas)
@@ -74,7 +80,7 @@ endif()
 # Cria os executáveis (um por diretório listado em EXERCISES)
 foreach(EXERCISE ${EXERCISES})
     # Extrai o nome da pasta como nome do executável
-    get_filename_component(EXE_NAME ${EXERCISE} NAME)
+    string(REPLACE "/" "_" EXE_NAME ${EXERCISE})
 
     # Coleta todos os .cpp dentro do diretório do exercício
     file(GLOB EXE_SOURCES src/${EXERCISE}/*.cpp)
