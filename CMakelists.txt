@@ -52,6 +52,7 @@ set(EXERCISES
     Lista2/Ex4
     Lista2/Ex5
     Lista2/Ex6
+    Lista3/Ex
 )
 
 add_compile_options(-Wno-pragmas)
